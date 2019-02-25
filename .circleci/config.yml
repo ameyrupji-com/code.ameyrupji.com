@@ -21,18 +21,17 @@ repo_cache_key: &repo_cache_key
   
 jobs:
   build:
-    upload-master:
-      <<: *deploy_default_config
-      steps:
-        - checkout
-        - aws-s3/copy:
-            from: /home/circleci/ameyrupji/src/ 
-            to: s3://code.ameyrupji.com/
-            arguments: --recursive
+    <<: *deploy_default_config
+    steps:
+      - checkout
+      - aws-s3/copy:
+          from: /home/circleci/ameyrupji/src/ 
+          to: s3://code.ameyrupji.com/
+          arguments: --recursive
 
 workflows:
   version: 2
-  build-upload:
+  upload-master:
     jobs:
       - approve-master:
           type: approval
