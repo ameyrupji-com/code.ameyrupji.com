@@ -1,16 +1,47 @@
-version: 2
+version: 2.1
+
+orbs:
+  aws-s3: circleci/aws-s3@1.0.4
+  
+references:
+
+deploy_base_image: &deploy_base_image
+  circleci/python:2.7
+
+working_directory: &working_directory
+  ~/ameyrupji
+  
+deploy_default_config: &deploy_default_config
+  docker:
+    - image: *deploy_base_image
+  working_directory: *working_directory
+
+repo_cache_key: &repo_cache_key
+  code-ameyrupji-com-{{ .Branch }}-{{ .Revision }}
+  
 jobs:
   build:
-    docker:
-      - image: debian:stretch
+    upload-master:
+      <<: *deploy_default_config
+      steps:
+        - checkout
+        - aws-s3/copy:
+            from: /home/circleci/ameyrupji/src/ 
+            to: s3://code.ameyrupji.com/
+            arguments: --recursive
 
-    steps:
-      - checkout
-
-      - run:
-          name: Greeting
-          command: echo Hello, world.
-
-      - run:
-          name: Print the Current Time
-          command: date
+workflows:
+  version: 2
+  build-upload:
+    jobs:
+      - approve-master:
+          type: approval
+          filters:
+            branches:
+              only: master
+      - upload-master:
+          requires:
+              - approve-master
+          filters:
+              branches:
+                only: master
